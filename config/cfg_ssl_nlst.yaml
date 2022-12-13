@@ -1,0 +1,93 @@
+task: cont_gansurv # cont_gansurv
+seed: 42
+cuda_id: 0
+
+wandb_dir: /home/liup/repo/GANSurv
+wandb_prj: GANSurv-Exp-ssl
+save_path: ./results-ssl/nlst-ssl_1stage_5fold
+
+# data
+dataset: NLST
+path_patch: /home/liup/data/v1/NLST/processed/feat-x20-RN50-B-color_norm/pt_files
+path_graph: /home/liup/data/v1/NLST/processed/wsigraph-x20-features
+path_cluster: /home/liup/data/v1/NLST/processed/patch-x20-cluster8-ids
+path_coordx5: /home/liup/data/v1/NLST/processed/hier-x5-tiles-s256/patches
+path_label: /home/liup/data/v1/NLST/table/nlst_path_full.csv
+feat_format: pt
+time_format: ratio
+time_bins: 4
+data_split_path: ./data_split/nlst/nlst-seed42-fold{}.npz
+data_split_seed: [0, 1, 2, 3, 4]
+save_prediction: True
+train_sampling: null
+
+# Backbone
+bcb_mode: patch # patch, cluster, graph
+bcb_dims: 1024-384-384 # input dim -> hidden dim -> embedding dim
+
+# Generator
+gen_dims: 384-1 # embedding dim -> out dim
+gen_noi_noise: 0-1 # mlp: 384 ->- 384/2 ->- 1
+gen_noi_noise_dist: uniform  # gaussian / uniform
+gen_noi_hops: 1
+gen_norm: False
+gen_dropout: 0.6
+gen_out_scale: sigmoid # sigmoid / exp
+
+# Discriminator
+disc_netx_in_dim: 1024
+disc_netx_out_dim: 128
+disc_netx_ksize: 1
+disc_netx_backbone: avgpool
+disc_netx_dropout: 0.25
+disc_nety_in_dim: 1
+disc_nety_hid_dims: 64-128
+disc_nety_norm: False
+disc_nety_dropout: 0.0
+disc_prj_path: x
+disc_prj_iprd: instance # bag / instance
+
+# loss for all
+loss_gan_coef: 0.004  # coefficient of GANLoss
+loss_netD: bce # bce/hinge/wasserstein 
+loss_regl1_coef: 0.00001 # coefficient of L1 Regularization
+# loss for discrete model
+loss_mle_alpha: 0.0
+# loss for continuous model
+loss_recon_norm: l1 # l1/l2
+loss_recon_alpha: 0.0
+loss_recon_gamma: 0.0
+
+# Optimizer
+opt_netG: adam
+opt_netG_lr: 0.00008
+opt_netG_weight_decay: 0.0005
+opt_netD_lr: 0.00008
+
+#training
+epochs: 300 # 
+batch_size: 1 
+bp_every_batch: 16
+num_workers: 8
+es_patience: 30
+es_warmup: 5
+es_verbose: True
+es_start_epoch: 0
+gen_updates: 1 # 1/2
+monitor_metrics: loss
+
+# test
+times_test_sample: 30
+log_plot: True
+
+# only for semi-supervised training
+semi_training: True
+semi_training_mode: UD+LD # UD/LD/UD+LD/NA
+ssl_epochs: 300
+ssl_num_labeled: [0.2, 0.4, 0.6, 0.8]
+ssl_kfold: 5
+ssl_resume_ckpt: best
+ssl_es_patience: 30
+ssl_es_warmup: 5
+ssl_es_verbose: True
+ssl_es_start_epoch: 0
