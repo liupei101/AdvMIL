@@ -1,5 +1,7 @@
 # AdvMIL: Adversarial Multiple Instance Learning for the Survival Analysis on Whole-Slide Images
 
+arXiv Preprint: http://arxiv.org/abs/2212.06515
+
 ## AdvMIL overview
 
 ![AdvMIL framework overview](tools/AdvMIL-GraphicalAbstract.png)
