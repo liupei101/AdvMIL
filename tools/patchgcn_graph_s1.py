@@ -15,9 +15,9 @@ import numpy as np
 from tqdm import tqdm
 
 
-ROOT_DIR = '/hdd/liup/data/WSI/{}/processed'
-READ_DIR = 'hier-x5-tiles-s256/patches'
-SAVE_DIR = 'hier-x20-tiles-s256/patches'
+ROOT_DIR = '/data/{}/processed' # root dir
+READ_DIR = 'tiles-x5-s256/patches' # path to 5x patch coordinates(to be read), as we use a big-to-small patching scheme. 
+SAVE_DIR = 'tiles-x20-s256/patches' # path to 20x patche coordinates (to be output). 
 
 
 """

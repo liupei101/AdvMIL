@@ -16,9 +16,18 @@ def prepare_dataset(patient_ids:list, cfg, **kws):
         ratio_sampling = kws['ratio_sampling']
     else:
         ratio_sampling = None
+    if 'mask_ratio' in kws:
+        if cfg['test']: # only used in a test mode
+            ratio_mask = kws['mask_ratio']
+        else:
+            ratio_mask = None
+    else:
+        ratio_mask = None
+    if mode not in ['patch', 'graph', 'cluster']:
+        mode = 'patch' # load patch-style data by default.
     dataset = WSIPatch(
         patient_ids, path_patch, path_label, mode, 
         read_format=feat_format, time_format=time_format, time_bins=time_bins, ratio_sampling=ratio_sampling,
-        cluster_path=cfg['path_cluster'], coord_path=cfg['path_coordx5'], graph_path=cfg['path_graph']
+        ratio_mask=ratio_mask, cluster_path=cfg['path_cluster'], coord_path=cfg['path_coordx5'], graph_path=cfg['path_graph']
     )
     return dataset

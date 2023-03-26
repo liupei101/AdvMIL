@@ -20,7 +20,7 @@ def concordance_index(
 
     For discrete model
     Args:
-        y_true (Union[Tensor, ndarray]): Observed time (at the first column) and censorship (at the second column). 
+        y_true (Union[Tensor, ndarray]): Observed time (at the first column) and event indicator (at the second column). 
         y_pred (Union[Tensor, ndarray]): Predicted value (time-dependent hazard function).
     """
     if isinstance(y_pred, Tensor):
@@ -34,7 +34,7 @@ def concordance_index(
         t, e = y_true[:, 0], y_true[:, 1].astype(np.bool_)
         return concordance_index_censored(e, t, -y_pred, tied_tol=1e-08)[0]
     else: # discrete model
-        y_t, y_e = y_true[:, 0], (1 - y_true[:, 1]).astype(np.bool_)
+        y_t, y_e = y_true[:, 0], y_true[:, 1].astype(np.bool_)
         survival = np.cumprod(1.0 - y_pred, axis=1)
         risk = np.sum(survival, axis=1)
         return concordance_index_censored(y_e, y_t, -risk, tied_tol=1e-08)[0]

@@ -132,18 +132,23 @@ def read_maxt_from_table(path: str, at_column='t'):
     df = pd.read_csv(path)
     return df[at_column].max()
 
-def save_prediction(patient_id, y_true, y_pred, save_path):
+def save_prediction(patient_id, y_true, y_pred, dist_pred, save_path):
     r"""Save surival prediction.
 
     Args:
         y_true (Tensor or ndarray): true labels, typically with shape [N, 2].
         y_pred (Tensor or ndarray): predicted values, typically with shape [N, 1].
+        dist_pred (Tensor or None): predicted distribution, typically with shape [N, times_sample, 1].
         save_path (string): path to save.
     """
     if isinstance(y_true, Tensor):
         y_true = y_true.numpy()
     if isinstance(y_pred, Tensor):
         y_pred = y_pred.numpy()
+    if isinstance(dist_pred, Tensor):
+        dist_pred = dist_pred.numpy()
+        dist_pred = np.squeeze(dist_pred) # [N, t, 1] -> [N, t]
+        assert len(patient_id) == len(dist_pred)
     assert len(patient_id) == len(y_true)
     assert len(patient_id) == len(y_pred)
     
@@ -155,6 +160,10 @@ def save_prediction(patient_id, y_true, y_pred, save_path):
             {'patient_id': patient_id, 't': t, 'e': e, 'pred_t': y_pred}, 
             columns=['patient_id', 't', 'e', 'pred_t']
         )
+        # save distribution only for continuous model
+        if dist_pred is not None:
+            npz_path = save_path[:-4] + "_dist.npz"
+            np.savez(npz_path, patient_id=patient_id, pred_dist=dist_pred)
     else:
         bins = y_pred.shape[1]
         y_t, y_e = y_true[:, [0]], 1 - y_true[:, [1]]

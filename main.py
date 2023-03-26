@@ -1,5 +1,5 @@
 """
-This is our framework training entry.
+Entry filename: main.py
 
 Code in this file inherts from https://github.com/hugochan/IDGL as it provides a flexible way 
 to configure parameters and inspect model performance. Great thanks to the author.
@@ -10,18 +10,21 @@ import numpy as np
 from collections import defaultdict, OrderedDict
 
 from model import MyHandler
+from model import BaselineHandler
 from utils.func import print_config
 
 
-def main(config):
-    model = MyHandler(config)
+def main(handler, config):
+    model = handler(config)
     if config['semi_training']:
         metrics = model.exec_semi_sl()
+    elif config['test']:
+        metrics = model.exec_test()
     else:
         metrics = model.exec()
     print('[INFO] Metrics:', metrics)
 
-def multi_run_main(config):
+def multi_run_main(handler, config):
     hyperparams = []
     for k, v in config.items():
         if isinstance(v, list):
@@ -33,9 +36,11 @@ def multi_run_main(config):
         for k in hyperparams:
             cnf['save_path'] += '-{}_{}'.format(k, cnf[k])
         print(cnf['save_path'])
-        model = MyHandler(cnf)
+        model = handler(cnf)
         if config['semi_training']:
             metrics = model.exec_semi_sl()
+        elif config['test']:
+            metrics = model.exec_test()
         else:
             metrics = model.exec()
         print('[INFO] Metrics:', metrics)
@@ -50,6 +55,7 @@ def multi_run_main(config):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', '-f', required=True, type=str, help='path to the config file')
+    parser.add_argument('--handler', '-d', required=True, type=str, help='model handler (adv or base)')
     parser.add_argument('--multi_run', action='store_true', help='flag: multi run')
     args = vars(parser.parse_args())
     return args
@@ -103,8 +109,13 @@ if __name__ == '__main__':
     cfg = get_args()
     config = get_config(cfg['config'])
     print_config(config)
-    if cfg['multi_run']:
-        multi_run_main(config)
+    if cfg['handler'] == 'adv':
+        handler = MyHandler
+    elif cfg['handler'] == 'base':
+        handler = BaselineHandler
     else:
-        main(config)
-
+        handler = None
+    if cfg['multi_run']:
+        multi_run_main(handler, config)
+    else:
+        main(handler, config)

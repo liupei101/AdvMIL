@@ -18,10 +18,10 @@ import nmslib
 
 #PATHIDS_TO_PROCESS = ['10848'] # 10848 pathology_id respective to the patient with ID 128599 
 PATHIDS_TO_PROCESS = []
-ROOT_DIR = '/hdd/liup/data/WSI/{}/processed'
-COOR_READ_DIR = 'hier-x20-tiles-s256/patches'
-FEAT_READ_DIR = 'feat-x20-RN50-B-color_norm/pt_files'
-SAVE_DIR = 'wsigraph-x20-features'
+ROOT_DIR = '/data/{}/processed' # root dir
+COOR_READ_DIR = 'tiles-x20-s256/patches' # path to patch coordinates
+FEAT_READ_DIR = 'feat-x20-RN50-B/pt_files' # patch to patch features
+SAVE_DIR = 'wsigraph-x20-features' # path to save
 
 
 class Hnsw:

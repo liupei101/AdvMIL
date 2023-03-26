@@ -2,54 +2,55 @@ task: cont_gansurv # cont_gansurv
 seed: 42
 cuda_id: 1
 
-wandb_dir: /home/liup/repo/GANSurv
-wandb_prj: GANSurv-Exp-eff
-save_path: ./results-eff/nlst-baseline-ext
+wandb_dir: /home/liup/repo/AdvMIL # path to this repo
+wandb_prj: AdvMIL-adv # wandb project name
+save_path: ./results-adv/nlst-patch # path to save log files during training and testing
 
 # data
 dataset: NLST
-path_patch: /home/liup/data/v1/NLST/processed/feat-x20-RN50-B-color_norm/pt_files
-path_graph: /home/liup/data/v1/NLST/processed/wsigraph-x20-features
-path_cluster: /home/liup/data/v1/NLST/processed/patch-x20-cluster8-ids
-path_coordx5: /home/liup/data/v1/NLST/processed/hier-x5-tiles-s256/patches
-path_label: /home/liup/data/v1/NLST/table/nlst_path_full.csv
-feat_format: pt
+path_patch: /data/nlst/processed/feat-x20-RN50-B/pt_files # path to patch features, for patch-based models
+path_graph: /data/nlst/processed/wsigraph-x20-features # path to WSI graphs, for graph-based models
+path_cluster: /data/nlst/processed/patch-x20-cluster8-ids # path to patch clusters, for cluster-based models
+path_coordx5: null
+path_label: ./data_split/nlst/nlst_path_full.csv # path to the csv table with patient_id, pathology_id, t, e
+feat_format: pt 
 time_format: ratio
 time_bins: 4
-data_split_path: ./data_split/nlst/nlst-seed42-fold{}.npz
-data_split_seed: [0, 1, 2, 3, 4]
+data_split_path: ./data_split/nlst/nlst-seed42-fold{}.npz # path to data split
+data_split_seed: [0, 1, 2, 3, 4] # fold identifiers, used to fill the placeholder in `data_split_path`
 save_prediction: True
-train_sampling: null
+train_sampling: null # w/o data sampling
 
-# Backbone
-bcb_mode: patch # patch, cluster, graph
-bcb_dims: 1024-384-384 # input dim -> hidden dim -> embedding dim
+# Backbone setting of MIL encoder
+bcb_mode: patch # choose patch, cluster, or graph
+bcb_dims: 1024-384-384 # the dims from input dim -> hidden dim -> embedding dim
 
-# Generator
+# Generator setting (regarding the end part)
 gen_dims: 384-1 # embedding dim -> out dim
-gen_noi_noise: 0-0 # mlp: 384 ->- 384/2 ->- 1
-gen_noi_noise_dist: uniform  # gaussian / uniform
+gen_noi_noise: 0-1 # noise setting, 0-1 / 1-0 / 1-1
+gen_noi_noise_dist: uniform  # noise type, gaussian / uniform
 gen_noi_hops: 1
 gen_norm: False
 gen_dropout: 0.6
-gen_out_scale: sigmoid # sigmoid / exp
+gen_out_scale: sigmoid
 
 # Discriminator
-disc_netx_in_dim: 1024
-disc_netx_out_dim: 128
+disc_type: prj # how to fuse X and t: cat (vector concatenation) / prj (vector projection)
+disc_netx_in_dim: 1024 # input dim of X
+disc_netx_out_dim: 128 # out dim of X
 disc_netx_ksize: 1
 disc_netx_backbone: avgpool
 disc_netx_dropout: 0.25
-disc_nety_in_dim: 1
-disc_nety_hid_dims: 64-128
+disc_nety_in_dim: 1 # input dim of t
+disc_nety_hid_dims: 64-128 # hidden dim of t
 disc_nety_norm: False
 disc_nety_dropout: 0.0
 disc_prj_path: x
-disc_prj_iprd: bag # bag / instance
+disc_prj_iprd: instance # choose bag (regular projection) / instance (RLIP)
 
 # loss for all
-loss_gan_coef: 0.0  # coefficient of GANLoss
-loss_netD: bce # bce/hinge/wasserstein 
+loss_gan_coef: 0.004  # coefficient of GANLoss
+loss_netD: bce # choose bce / hinge / wasserstein 
 loss_regl1_coef: 0.00001 # coefficient of L1 Regularization
 # loss for discrete model
 loss_mle_alpha: 0.0
@@ -60,34 +61,44 @@ loss_recon_gamma: 0.0
 
 # Optimizer
 opt_netG: adam
-opt_netG_lr: 0.00008
+opt_netG_lr: 0.00008 # learning rate of generator
 opt_netG_weight_decay: 0.0005
-opt_netD_lr: 0.00008
+opt_netD_lr: 0.00008 # learning rate of discriminator
 
 #training
-epochs: 300 # 
+epochs: 300 # epoch numbers
 batch_size: 1 
 bp_every_batch: 16
-num_workers: 8
-es_patience: 30
+num_workers: 8 # work numbers for loading WSI features
+es_patience: 30 # es: early stopping
 es_warmup: 5
 es_verbose: True
 es_start_epoch: 0
 gen_updates: 1 # 1/2
-monitor_metrics: loss
+monitor_metrics: loss # metrics on validation set for early stopping
 
 # test
-times_test_sample: 1
-log_plot: True
+times_test_sample: 30 # sampling times when predicting survival from each WSI. 
+log_plot: False
 
 # only for semi-supervised training
 semi_training: False
-semi_training_mode: UD+LD # UD/LD/UD+LD/NA
-ssl_epochs: 200
-ssl_num_labeled: 100
-ssl_kfold: 1
-ssl_resume_ckpt: best
-ssl_es_patience: 30
-ssl_es_warmup: 0
-ssl_es_verbose: False
-ssl_es_start_epoch: 0
+semi_training_mode: UD+LD # training mode: UD / LD / UD+LD / NA (see more in the line 735 of model_hanlder.py)
+ssl_epochs: 300 # epoch number of semi-supervised training
+ssl_num_labeled: [0.2, 0.4, 0.6, 0.8] # the ratio of the labeled data split from the training data
+ssl_kfold: 5 # the fold number for k-fold semi-supervised training 
+ssl_resume_ckpt: best # won't be used
+ssl_es_patience: 30 # early stopping setting
+ssl_es_warmup: 5 # early stopping setting
+ssl_es_verbose: True # if verbose when using early stopping
+ssl_es_start_epoch: 0 # early stopping setting
+
+# only for a testing mode
+test: False
+test_wandb_prj: AdvMIL-best-zeromask-test # wandb project name of test mode
+test_path: test # dataset name you want to test, which should be a key in the npz file for data split
+test_load_path: ./advmil_best_model/nlst-ablation_ncor_iprd_gl4-data_split_seed_{}-gen_noi_noise_0-1 # path to load trained models
+test_save_path: ./results-robust/results-zeromask_test/advmil-best/nlst-test_maskzero_{}-data_split_seed_{} # path to save test results
+test_mask_ratio: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] # mask ratio 
+test_sampling_times: 1 # sampling times (in test mode) when predicting survival from each WSI. 
+test_zero_noise: True # if using zero noise for testing

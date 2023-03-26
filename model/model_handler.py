@@ -11,7 +11,7 @@ from types import SimpleNamespace
 import wandb
 
 from .GANSurv import Generator as Generator
-from .GANSurv import PrjDiscriminator as Discriminator
+from .GANSurv import Discriminator, PrjDiscriminator
 from .model_utils import init_weights
 from .backbone import load_backbone
 from utils.func import *
@@ -26,30 +26,46 @@ from dataset.GraphBatchWSI import collate_MIL_graph
 #######################################################################
 #     Handling general model initialization, training, and test
 # 
-# This class handles three tasks:
+# This class handles the three tasks:
 # 1. general model training, validation, and test for AdvMIL;
 # 2. k-fold semi-supervised training, validation, test for AdvMIL;
-# 3. test using previous pre-trained model weights (to be completed).
+# 3. test using previous pre-trained model weights.
 #######################################################################
 
 class MyHandler(object):
+    """Handling general model initialization, training, and test"""
     def __init__(self, cfg):
         _check_configs(cfg)
 
         torch.cuda.set_device(cfg['cuda_id'])
         seed_everything(cfg['seed'])
 
-        if not osp.exists(cfg['save_path']):
-            os.makedirs(cfg['save_path'])
-        run_name = cfg['save_path'].split('/')[-1]
-        self.writer = wandb.init(project=cfg['wandb_prj'], name=run_name, dir=cfg['wandb_dir'], config=cfg, reinit=True)
-        self.last_netD_ckpt_path = osp.join(cfg['save_path'], 'modelD-last.pth')
-        self.best_netD_ckpt_path = osp.join(cfg['save_path'], 'modelD-best.pth')
-        self.last_netG_ckpt_path = osp.join(cfg['save_path'], 'modelG-last.pth')
-        self.best_netG_ckpt_path = osp.join(cfg['save_path'], 'modelG-best.pth')
-        self.last_metrics_path   = osp.join(cfg['save_path'], 'metrics-last.txt')
-        self.best_metrics_path   = osp.join(cfg['save_path'], 'metrics-best.txt')
-        self.config_path    = osp.join(cfg['save_path'], 'print_config.txt')
+        if cfg['test']:
+            cfg['test_save_path'] = cfg['test_save_path'].format(cfg['test_mask_ratio'], cfg['data_split_seed'])
+            cfg['test_load_path'] = cfg['test_load_path'].format(cfg['data_split_seed'])
+            if not osp.exists(cfg['test_save_path']):
+                os.makedirs(cfg['test_save_path'])
+            run_name = cfg['test_save_path'].split('/')[-1]
+            self.writer = wandb.init(project=cfg['test_wandb_prj'], name=run_name, dir=cfg['wandb_dir'], config=cfg, reinit=True)
+            self.last_netD_ckpt_path = osp.join(cfg['test_load_path'], 'modelD-last.pth')
+            self.best_netD_ckpt_path = osp.join(cfg['test_load_path'], 'modelD-best.pth')
+            self.last_netG_ckpt_path = osp.join(cfg['test_load_path'], 'modelG-last.pth')
+            self.best_netG_ckpt_path = osp.join(cfg['test_load_path'], 'modelG-best.pth')
+            self.last_metrics_path   = osp.join(cfg['test_save_path'], 'metrics-last.txt')
+            self.best_metrics_path   = osp.join(cfg['test_save_path'], 'metrics-best.txt')
+            self.config_path    = osp.join(cfg['test_save_path'], 'print_config.txt')
+        else:
+            if not osp.exists(cfg['save_path']):
+                os.makedirs(cfg['save_path'])
+            run_name = cfg['save_path'].split('/')[-1]
+            self.writer = wandb.init(project=cfg['wandb_prj'], name=run_name, dir=cfg['wandb_dir'], config=cfg, reinit=True)
+            self.last_netD_ckpt_path = osp.join(cfg['save_path'], 'modelD-last.pth')
+            self.best_netD_ckpt_path = osp.join(cfg['save_path'], 'modelD-best.pth')
+            self.last_netG_ckpt_path = osp.join(cfg['save_path'], 'modelG-last.pth')
+            self.best_netG_ckpt_path = osp.join(cfg['save_path'], 'modelG-best.pth')
+            self.last_metrics_path   = osp.join(cfg['save_path'], 'metrics-last.txt')
+            self.best_metrics_path   = osp.join(cfg['save_path'], 'metrics-best.txt')
+            self.config_path    = osp.join(cfg['save_path'], 'print_config.txt')
 
         self.bcb = cfg['bcb_mode']
         # setup model
@@ -64,10 +80,11 @@ class MyHandler(object):
                 cfg['gen_norm'], cfg['gen_dropout'], cfg['gen_out_scale'])
             self.netG.apply(init_weights) # apply model initialization
             # Discriminator
+            Cls_Discriminator = PrjDiscriminator if cfg['disc_type'] == 'prj' else Discriminator
             disc_x_args = SimpleNamespace(**sparse_key(cfg, prefixes='disc_netx'))
             disc_y_args = SimpleNamespace(**sparse_key(cfg, prefixes='disc_nety'))
             disc_y_args.hid_dims = sparse_str(disc_y_args.hid_dims)
-            self.netD = Discriminator(disc_x_args, disc_y_args, prj_path=cfg['disc_prj_path'], inner_product=cfg['disc_prj_iprd'])
+            self.netD = Cls_Discriminator(disc_x_args, disc_y_args, prj_path=cfg['disc_prj_path'], inner_product=cfg['disc_prj_iprd'])
         else:
             raise ValueError(f"Expected cont_gansurv/disc_gansurv, but got {cfg['task']}")
         self.netG = self.netG.cuda()
@@ -167,6 +184,43 @@ class MyHandler(object):
         # Evals
         evals_loader = {'train': train_loader, 'validation': val_loader, 'test': test_loader}
         metrics = self._eval_all(evals_loader, ckpt_type='best', run_name=run_name, if_print=True)
+        return metrics
+    
+    def exec_test(self):
+        print('[exec] execute test {} using backbone-mode {}.'.format(self.task, self.bcb))
+        print('[exec] start testing {}.'.format(self.cfg['test_path']))
+        mode_name = 'test_mode'
+        
+        # Prepare datasets 
+        path_split = self.cfg['data_split_path'].format(self.cfg['data_split_seed'])
+        pids_train, pids_val, pids_test = read_datasplit_npz(path_split)
+        if self.cfg['test_path'] == 'train':
+            pids = pids_train
+        elif self.cfg['test_path'] == 'val':
+            pids = pids_val
+        elif self.cfg['test_path'] == 'test':
+            pids = pids_test
+        else:
+            pass
+        print('[exec] test patient IDs from {}'.format(self.cfg['test_path']))
+
+        if self.bcb == 'graph':
+            collate = collate_MIL_graph
+        else:
+            collate = default_collate
+
+        # Prepare datasets 
+        test_set = prepare_dataset(pids, self.cfg, mask_ratio=self.cfg['test_mask_ratio'])
+        self.patient_id.update({'exec-test': test_set.pids})
+        test_loader = DataLoader(test_set, batch_size=self.cfg['batch_size'], 
+            generator=seed_generator(self.cfg['seed']), num_workers=self.cfg['num_workers'], 
+            shuffle=False, worker_init_fn=seed_worker, collate_fn=collate
+        )
+
+        # Evals
+        evals_loader = {'exec-test': test_loader}
+        metrics = self._eval_all(evals_loader, ckpt_type='best', if_print=True, test_mode=True, 
+            test_mode_name=mode_name, test_zero_noise=self.cfg['test_zero_noise'])
         return metrics
 
     def _run_training(self, epochs, train_loader, name_loader, val_loaders=None, val_name=None, 
@@ -443,19 +497,37 @@ class MyHandler(object):
         gen_total_loss.backward()
         self.optimizerG.step()
 
-    def _eval_all(self, evals_loader, ckpt_type='best', run_name='train', if_print=True):
+    def _eval_all(self, evals_loader, ckpt_type='best', run_name='train', if_print=True, 
+        test_mode=False, test_mode_name='test_mode', test_zero_noise=False):
+        """
+        test_mode=True only if run self.exec_test(), indicating a test mode.
+        """
+        if test_mode:
+            print('[warning] you are in test mode now.')
+            ckpt_run_name = 'train'
+            wandb_group_name = test_mode_name
+            metrics_path_name = test_mode_name
+            csv_prefix_name = test_mode_name
+            sampling_times = self.cfg['test_sampling_times']
+        else:
+            ckpt_run_name = run_name
+            wandb_group_name = run_name
+            metrics_path_name = run_name
+            csv_prefix_name = run_name
+            sampling_times = self.cfg['times_test_sample']
+        
         if ckpt_type == 'best':
-            ckpts = [add_prefix_to_filename(self.best_netG_ckpt_path, run_name), 
-                     add_prefix_to_filename(self.best_netD_ckpt_path, run_name)]
-            wandb_group = 'bestckpt/{}'.format(run_name)
-            print_path = add_prefix_to_filename(self.best_metrics_path, run_name)
-            csv_name = '{}_best'.format(run_name)
+            ckpts = [add_prefix_to_filename(self.best_netG_ckpt_path, ckpt_run_name), 
+                     add_prefix_to_filename(self.best_netD_ckpt_path, ckpt_run_name)]
+            wandb_group = 'bestckpt/{}'.format(wandb_group_name)
+            print_path = add_prefix_to_filename(self.best_metrics_path, metrics_path_name)
+            csv_name = '{}_best'.format(csv_prefix_name)
         elif ckpt_type == 'last':
-            ckpts = [add_prefix_to_filename(self.last_netG_ckpt_path, run_name), 
-                     add_prefix_to_filename(self.last_netD_ckpt_path, run_name)]
-            wandb_group = 'lastckpt/{}'.format(run_name)
-            print_path = add_prefix_to_filename(self.last_metrics_path, run_name)
-            csv_name = '{}_last'.format(run_name)
+            ckpts = [add_prefix_to_filename(self.last_netG_ckpt_path, ckpt_run_name), 
+                     add_prefix_to_filename(self.last_netD_ckpt_path, ckpt_run_name)]
+            wandb_group = 'lastckpt/{}'.format(wandb_group_name)
+            print_path = add_prefix_to_filename(self.last_metrics_path, metrics_path_name)
+            csv_name = '{}_last'.format(csv_prefix_name)
         else:
             pass
 
@@ -464,7 +536,7 @@ class MyHandler(object):
             if loader is None:
                 continue
             cltor = self.test_model(self.netG, self.netD, self.bcb, loader, 
-                times_test_sample=self.cfg['times_test_sample'], checkpoints=ckpts,
+                times_test_sample=sampling_times, checkpoints=ckpts, test_zero_noise=test_zero_noise
             )
             ci, loss = self._eval_and_print(cltor, name='{}/{}'.format(wandb_group, k))
             metrics[k] = [('cindex', ci), ('loss', loss)]
@@ -474,6 +546,10 @@ class MyHandler(object):
                 cur_y_hat = cltor['avg_y_hat']
             else:
                 cur_y_hat = cltor['y_hat']
+            if 'dist_y_hat' in cltor:
+                dist_y_hat = cltor['dist_y_hat']
+            else:
+                dist_y_hat = None
 
             if self.cfg['log_plot']:
                 plt = plot_time_kde(cur_y, cur_y_hat)
@@ -482,9 +558,10 @@ class MyHandler(object):
                 wandb.log({plt_name: plt_img})
 
             if self.cfg['save_prediction']:
-                path_save_pred = osp.join(self.cfg['save_path'], '{}_pred_{}.csv'.format(csv_name, k))
+                dir_save_pred = self.cfg['save_path'] if not test_mode else self.cfg['test_save_path']
+                path_save_pred = osp.join(dir_save_pred, '{}_pred_{}.csv'.format(csv_name, k))
                 patient_ids = self._get_patient_id(k, cltor['idx'])
-                save_prediction(patient_ids, cur_y, cur_y_hat, path_save_pred)
+                save_prediction(patient_ids, cur_y, cur_y_hat, dist_y_hat, path_save_pred)
 
         if if_print:
             print_metrics(metrics, print_to_path=print_path)
@@ -519,7 +596,7 @@ class MyHandler(object):
         return [p in label_visible_pids for p in pids]
 
     @staticmethod
-    def test_model(modelG, modelD, backbone, loader, times_test_sample=1, checkpoints=None):
+    def test_model(modelG, modelD, backbone, loader, times_test_sample=1, checkpoints=None, test_zero_noise=False):
         if checkpoints is not None:
             netG_ckpt = torch.load(checkpoints[0])
             netD_ckpt = torch.load(checkpoints[1])
@@ -533,12 +610,12 @@ class MyHandler(object):
                 x_data, x_ext = [_x.cuda() for _x in x]
                 if backbone == 'graph':
                     x_data = x_data.unsqueeze(0)
-                    y_hat = modelG(x_ext, None)
+                    y_hat = modelG(x_ext, None, zero_noise=test_zero_noise)
                 elif backbone == 'patch':
-                    y_hat = modelG(x_data, None) # skip coords if backbone=patch
+                    y_hat = modelG(x_data, None, zero_noise=test_zero_noise) # skip coords if backbone=patch
                     # y_hat = modelG(x_data, x_ext)
                 else:
-                    y_hat = modelG(x_data, x_ext)
+                    y_hat = modelG(x_data, x_ext, zero_noise=test_zero_noise)
                 f_fake = modelD(x_data, y_hat)
                 res = agg_tensor(res, 
                     {'idx': idx.detach().cpu(), 'y': y.detach().cpu(), 
@@ -550,15 +627,17 @@ class MyHandler(object):
                     y_hat_list = []
                     for i in range(times_test_sample):
                         if backbone == 'graph':
-                            cur_y_hat = modelG(x_ext, None)
+                            cur_y_hat = modelG(x_ext, None, zero_noise=test_zero_noise)
                         elif backbone == 'patch':
-                            cur_y_hat = modelG(x_data, None) # skip coords if backbone=patch
+                            cur_y_hat = modelG(x_data, None, zero_noise=test_zero_noise) # skip coords if backbone=patch
                             # cur_y_hat = modelG(x_data, x_ext)
                         else:
-                            cur_y_hat = modelG(x_data, x_ext)
+                            cur_y_hat = modelG(x_data, x_ext, zero_noise=test_zero_noise)
                         y_hat_list.append(cur_y_hat)
                     y_hat_list = torch.stack(y_hat_list)
+                    res = agg_tensor(res, {'dist_y_hat': y_hat_list.transpose(0,1).detach().cpu()}) # [B, times_test, out_dim]
                     avg_y_hat, _ = torch.median(y_hat_list, dim=0)
+                    # avg_y_hat = torch.mean(y_hat_list, dim=0)
                     res = agg_tensor(res, {'avg_y_hat': avg_y_hat.detach().cpu()})
 
         return res

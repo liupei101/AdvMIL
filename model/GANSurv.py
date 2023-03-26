@@ -27,11 +27,14 @@ class Generator(nn.Module):
         self.backbone = backbone
         self.out_scale = out_scale
 
-    def forward(self, x, x_ext):
+    def forward(self, x, x_ext, zero_noise=False):
         H = self.backbone(x, x_ext)
         for i, layer_i in enumerate(self.MLPs):
             if self.noise[i] == 1:
-                N = generate_noise(*H.size(), to_device=H.device, distribution=self.noise_dist)
+                if zero_noise:
+                    N = torch.zeros_like(H)
+                else:
+                    N = generate_noise(*H.size(), to_device=H.device, distribution=self.noise_dist)
                 data = torch.cat([H, N], dim=1)
             else:
                 data = H

@@ -11,6 +11,34 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 
 
+def random_mask_square_instance(bag:Tensor, mask_ratio:float, scale=4, mask_way='mask_zero'):
+    if mask_ratio <= 0 or mask_ratio > 1:
+        return bag
+
+    N = bag.shape[0]
+    n_square = scale * scale
+    assert N % n_square == 0, 'bag must consist of square instances.'
+    N_scaled = N // n_square
+
+    # calculate under the scaled version
+    n_keep = max(1, int(N_scaled * (1 - mask_ratio)))
+    idxs = np.random.permutation(N_scaled)
+    idxs_keep = np.sort(idxs[:n_keep])
+
+    # restore to the original scale
+    idxs_keep = idxs_keep.reshape(-1, 1) * np.array([n_square] * n_square).reshape(1, -1) + \
+        np.array([_ for _ in range(n_square)]).reshape(1, -1)
+    idxs_keep = idxs_keep.reshape(-1).tolist()
+
+    if mask_way == 'discard':
+        return bag[idxs_keep]
+    elif mask_way == 'mask_zero':
+        new_bag = torch.zeros_like(bag)
+        new_bag[idxs_keep] = bag[idxs_keep]
+        return new_bag
+    else:
+        raise NotImplementedError("Cannot run with mask_way={}.".format(mask_way))
+
 def add_prefix_to_filename(path, prefix=''):
     dir_name, file_name = osp.split(path)
     file_name = prefix + '_' + file_name
@@ -301,7 +329,7 @@ class EarlyStopping:
         elif self.best_score is None:
             self.best_score = score
             self.update_score(val_loss)
-        elif score < self.best_score:
+        elif score - 1e-6 < self.best_score:
             self.counter += 1
             print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience and epoch > self.start_epoch:

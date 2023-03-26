@@ -6,7 +6,8 @@ from torch.utils.data import Dataset
 import torch_geometric
 
 from utils.io import retrieve_from_table, read_patch_feature, read_patch_coord
-from utils.func import rearrange_coord, sampling_data
+from utils.func import rearrange_coord, sampling_data, random_mask_square_instance
+
 
 #######################################################################
 # WSI dataset class: it supports for loading cluster-, graph-, and 
@@ -22,20 +23,29 @@ class WSIPatch(Dataset):
         mode (string): 'patch', 'cluster', or 'graph'.
         read_format (string): The suffix name or format of the file storing patch feature.
     """
-    def __init__(self, patient_ids: list, patch_path: str, label_path: str, mode:str,
-        read_format:str='pt', time_format='ratio', time_bins=4, ratio_sampling:Union[None,float,int]=None, **kws):
+    def __init__(self, patient_ids: list, patch_path: str, label_path: str, mode:str, read_format:str='pt', 
+        time_format='ratio', time_bins=4, ratio_sampling:Union[None,float,int]=None, ratio_mask=None, **kws):
         super(WSIPatch, self).__init__()
+        
+        assert mode in ['patch', 'cluster', 'graph']
+        self.mode = mode
+
         if ratio_sampling is not None:
             print("[dataset] Sampling with ratio_sampling = {}".format(ratio_sampling))
             patient_ids, pid_left = sampling_data(patient_ids, ratio_sampling)
             print("[dataset] Sampled {} patients, left {} patients".format(len(patient_ids), len(pid_left)))
+        if ratio_mask is not None and ratio_mask > 1e-5:
+            assert ratio_mask <= 1, 'The argument ratio_mask must be not greater than 1.'
+            assert self.mode == 'patch', 'Only support a patch mode for instance masking.'
+            self.ratio_mask = ratio_mask
+            print("[dataset] Masking instances with ratio_mask = {}".format(ratio_mask))
+        else:
+            self.ratio_mask = None
 
         info = ['pid', 'pid2sid', 'pid2label']
         self.pids, self.pid2sid, self.pid2label = retrieve_from_table(
             patient_ids, label_path, ret=info, time_format=time_format, time_bins=time_bins)
         self.read_path = patch_path
-        assert mode in ['patch', 'cluster', 'graph']
-        self.mode = mode
         self.read_format = read_format
         self.kws = kws
         if self.mode == 'cluster':
@@ -67,6 +77,9 @@ class WSIPatch(Dataset):
                 feats.append(read_patch_feature(full_path, dtype='torch'))
 
             feats = torch.cat(feats, dim=0).to(torch.float)
+            if self.ratio_mask:
+                feats = random_mask_square_instance(feats, self.ratio_mask, scale=4, mask_way='mask_zero')
+
             return index, (feats, torch.Tensor([0])), label
 
         elif self.mode == 'cluster':

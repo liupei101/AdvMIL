@@ -3,6 +3,7 @@ It contains the main-stream networks used for WSI prognosis modeling.
 (1) Cluster-based network baseline: DeepAttnMISL
 (2) Graph-based   network baseline: PatchGCN
 (3) Patch-base (Sequence-based)   : An improved ESAT (DualTrans_High_Stream)
+(4) Attention-based MIL: ABMIL
 
 All above is truncated version, i.e., the prediction head in network is removed.
 """
@@ -17,13 +18,13 @@ from .backbone_utils import *
 
 def Model_Zoo(mode):
     if mode == 'patch':
-        return DualTrans_HS # An improved ESAT
+        return DualTrans_HS
     elif mode == 'cluster':
-        return DeepAttMISL # original DeepAttMISL
+        return DeepAttMISL
     elif mode == 'graph':
-        return PatchGCN # original PatchGCN
+        return PatchGCN
     else:
-        return None
+        return ABMIL
 
 def load_backbone_param(mode, dims):
     # Default Params
@@ -39,7 +40,8 @@ def load_backbone_param(mode, dims):
         args = [dims[:3]]
         kws = {'num_layers': 1, 'dropout': 0.25}
     else:
-        args, kws = [], {}
+        args = [dims[:3]]
+        kws = {'dropout': 0.25}
     return args, kws
 
 def load_backbone(mode, dims):
@@ -47,6 +49,42 @@ def load_backbone(mode, dims):
     args, kws = load_backbone_param(mode, dims)
     model = net(*args, **kws)
     return model
+
+
+class ABMIL(nn.Module):
+    def __init__(self, dims:List, dropout:float=0.25):
+        r"""
+        Attention MIL Implementation. Refer to https://github.com/mahmoodlab/Patch-GCN.
+        Args:
+            dims: input - hidden
+            dropout (float): Dropout rate
+        """
+        super(ABMIL, self).__init__()
+        assert len(dims) == 3 # [1024, 384, 384]
+        dim_in, dim_hid, dim_out = dims
+
+        ### Deep Sets Architecture Construction
+        self.attention_net = nn.Sequential(
+            nn.Linear(dim_in, dim_hid), 
+            nn.ReLU(), 
+            nn.Dropout(dropout),
+            Attn_Net_Gated(L=dim_hid, D=dim_hid, dropout=dropout, n_classes=1)
+        )
+        self.rho = nn.Sequential(
+            nn.Linear(dim_hid, dim_out), 
+            nn.ReLU(), 
+            nn.Dropout(dropout)
+        )
+
+    def forward(self, x_path, *args):
+        x_path = x_path.squeeze(0) # batch_size=1
+        A, h_path = self.attention_net(x_path)  
+        A = torch.transpose(A, 1, 0)
+        A = F.softmax(A, dim=1) 
+        h_path = torch.mm(A, h_path)
+        H = self.rho(h_path)
+        return H
+
 
 class DeepAttMISL(nn.Module):
     """Same as the official implementation: DeepAttnMISL/blob/master/DeepAttnMISL_model.py"""
@@ -80,12 +118,15 @@ class DeepAttMISL(nn.Module):
         # Global Attention Pooling
         A, h_path = self.attention_net(h_cluster) 
         A = torch.transpose(A, 1, 0)
-        A_raw = A 
         A = F.softmax(A, dim=1) 
         H = torch.mm(A, h_path)
         return H
 
+
 class PatchGCN(nn.Module):
+    """forked from the official implementation: 
+        https://github.com/mahmoodlab/Patch-GCN/blob/master/models/model_graph_mil.py#L116
+    """
     def __init__(self, dims:List, num_layers:int=3, edge_agg:str='spatial', dropout:float=0.25):
         super(PatchGCN, self).__init__()
         assert len(dims) == 3 # [1024, 384, 384]
@@ -126,7 +167,11 @@ class PatchGCN(nn.Module):
         H = torch.mm(F.softmax(A_path, dim=1), h_path)
         return H
 
+
 class DualTrans_HS(nn.Module):
+    """The implementation of Transformer-based ESAT. Refer to Shen et al., AAAI, 2022.
+    Convolution layer is simplied as a local avgpool layer for adapting to sparse patches.
+    """
     def __init__(self, dims:List, emb_backbone:str, args_emb_backbone, 
         tra_backbone:str, args_tra_backbone, dropout:float=0.25):
         super(DualTrans_HS, self).__init__()

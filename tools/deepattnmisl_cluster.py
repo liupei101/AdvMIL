@@ -12,11 +12,11 @@ import pandas as pd
 import torch
 from sklearn.cluster import KMeans
 
-PIDS_TO_PROCESS = ['128599']
-path_csv = '/hdd/liup/data/WSI/{}/table/{}_path_full.csv'
-ROOT_DIR = '/hdd/liup/data/WSI/{}/processed'
-READ_DIR = 'feat-x20-RN50-B-color_norm/pt_files'
-SAVE_DIR = 'patch-x20-cluster{}-ids'
+PIDS_TO_PROCESS = []
+path_csv = '/data/{}/table/{}_path_full.csv' # path to the table with patient_id and pathology_id
+ROOT_DIR = '/data/{}/processed' # root dir of data
+READ_DIR = 'feat-x20-RN50-B/pt_files' # path to patch features
+SAVE_DIR = 'patch-x20-cluster{}-ids' # directory name to output and save in ROOT_DIR
 
 def main(dir_read, dir_save, csv_path, num_clusters):
     df = pd.read_csv(csv_path, dtype={'patient_id': str, 'pathology_id': str}) # patient_id/pathology_id
@@ -57,6 +57,7 @@ def main(dir_read, dir_save, csv_path, num_clusters):
 
 
 # python3 deepattnmisl_cluster.py NLST 8
+# 8 is the number of clusters you want to set
 if __name__ == '__main__':
     dataset_name = sys.argv[1]
     N_cluster = int(sys.argv[2])
