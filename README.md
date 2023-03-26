@@ -1,9 +1,12 @@
 # AdvMIL: Adversarial Multiple Instance Learning for the Survival Analysis on Whole-Slide Images
 
 arXiv Preprint: http://arxiv.org/abs/2212.06515
+
 Model release: [Google Rrive - AdvMIL-models](https://drive.google.com/drive/folders/1sSfUe537zWVIsNZ9t9nSS2GzwgmKG5ry?usp=sharing)
 
-*TLDR*: 
+(on updating)
+
+*TL;DR*: 
 > This work proposes a novel adversarial MIL framework for the survival analysis on gagipixel Whole-Slide Images (WSIs). This framework directly estimates the distribution of time-to-event from WSIs by implicitly sampling from generator. It introduces adversarial time-to-event modeling into the MIL paradigm that is much necessary for WSI analysis, by constructing a MIL encoder and a region-level instance projection fusion network for generator and discriminator, respectively. We empirically demonstrate that AdvMIL has the following advantages or abilities: (1) combining it with existing MIL networks for predictive performance enhancement; (2) effectively utilizing unlabeled WSIs for semi-supervised learning; (3) the robustness to patch occlusion, image gaussian blurring, and image HED color variation. 
 
 ## AdvMIL walkthrough 
@@ -18,17 +21,21 @@ With CLAM, it is expected that you have the following file directories (taking `
 - `/data/nlst/processed/feat-x20-RN50-B`: path to all patch features. 
 - `/data/nlst/processed/tiles-x20-s256`: path to all segmented patch coordinates. 
 
-Option: if you want to a graph-based or cluster-based model, you should further prepare the followings:
+*Options*: if you want to a graph-based or cluster-based model, you should further prepare the followings:
 - graph-based model: go to `./tools/` and run `python3 patchgcn_graph_s1.py nlst`  and `python3 patchgcn_graph_s2.py nlst`.
 - cluster-based model: go to `./tools/` and run `python3 deepattnmisl_cluster.py nlst 8`.
 
 ### Network training
 
-You should prepare a YAML file for configuring the setting of read/save path, network architecture, network training, etc. We have provided an example (`./config/cfg_nlst.yaml`), as well as detailed descriptions regarding important configurations. 
+You should prepare a `YAML` file for configuring the setting of read/save path, network architecture, network training, etc. We have provided an example configuration (`./config/cfg_nlst.yaml`) for training nlst with AdvMIL, as well as the detailed descriptions regarding important configurations. 
 
-When you finished the configuration, you can run the following command for training, validation, and testing AdvMIL:
+When you finished the configuration above, you can run the following command for training, validation, and testing AdvMIL:
 ```bash
-# train, val, and test
+# load your config in config/cfg_nlst.yaml, and run AdvMIL
+# there are three possible running modes after configuration:
+# 1. common train/val/test pipeline 
+# 2. only test using the models trained before (set test to True)
+# 3. semi-supervised train/val/test pipeline (set semi_training to True)
 python3 main.py --config config/cfg_nlst.yaml --handler adv --multi_run
 ```
 
