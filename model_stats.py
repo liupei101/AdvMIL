@@ -1,6 +1,3 @@
-"""
-This script is used to evaluate model's computation efficiency.
-"""
 import torch
 import torch.nn as nn
 from types import SimpleNamespace
@@ -50,7 +47,7 @@ def model_setup(args):
         disc_y_args.hid_dims = sparse_str(disc_y_args.hid_dims)
         model = GANSurv.PrjDiscriminator(disc_x_args, disc_y_args, prj_path='x', inner_product='bag')
     elif args.m == 'G':
-        if args.b == 'cluster' or args.b == 'patch':
+        if args.b == 'cluster' or args.b == 'patch' or args.b == 'abmil':
             cfg = {
                 'bcb_dims': '1024-384-384', # input dim -> hidden dim -> embedding dim
                 'gen_dims': '384-1', # embedding dim -> out dim
@@ -110,11 +107,11 @@ def G_input_constructor(args=('patch', 'tuple')):
     # input cfg
     cfg = {
         'bcb_mode': bcb_type,
-        'path_patch': '/hdd/liup/data/WSI/NLST/processed/feat-x20-RN50-B-color_norm/pt_files',
-        'path_graph': '/hdd/liup/data/WSI/NLST/processed/wsigraph-x20-features',
-        'path_cluster': '/hdd/liup/data/WSI/NLST/processed/patch-x20-cluster8-ids',
-        'path_coordx5': '/hdd/liup/data/WSI/NLST/processed/hier-x5-tiles-s256/patches',
-        'path_label': '/hdd/liup/data/WSI/NLST/table/nlst_path_full.csv',
+        'path_patch': '/NAS02/ExpData/nlst/feat-x20-RN50-B-color_norm/pt_files',
+        'path_graph': '/NAS02/ExpData/nlst/wsigraph-x20-features',
+        'path_cluster': '/NAS02/ExpData/nlst/patch-x20-cluster8-ids',
+        'path_coordx5': '/NAS02/ExpData/nlst/hier-x5-tiles-s256/patches',
+        'path_label': './data_split/nlst/nlst_path_full.csv',
         'feat_format': 'pt',
         'time_format': 'ratio',
         'time_bins': 4,
@@ -126,7 +123,7 @@ def G_input_constructor(args=('patch', 'tuple')):
         param1 = data_x_ext.cuda()
         param2 = None
         # pred = self.netG(data_x_ext, None) # data_x_ext -> GraphData if backbone=graph
-    elif bcb_type == 'patch':
+    elif bcb_type == 'patch' or bcb_type == 'abmil':
         data_x = data_x.unsqueeze(0)
         param1 = data_x.cuda()
         param2 = None
@@ -148,7 +145,7 @@ def G_input_constructor(args=('patch', 'tuple')):
 parser = argparse.ArgumentParser(description='Configurations for Models.')
 parser.add_argument('-a', type=str, choices=['thop', 'ptflops'], default='ptflops')
 parser.add_argument('-m', type=str, choices=['G', 'D'], default='D')
-parser.add_argument('-b', type=str, choices=['cluster', 'graph', 'patch'], default='patch')
+parser.add_argument('-b', type=str, choices=['cluster', 'graph', 'patch', 'abmil'], default='patch')
 
 # python3 model_stats.py -a ptflops -m D -b patch
 if __name__ == '__main__':
