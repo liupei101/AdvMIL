@@ -12,11 +12,11 @@ path_patch: /data/nlst/processed/feat-l1-RN50-B/pt_files # path to patch feature
 path_graph: /data/nlst/processed/wsigraph-l1-features # path to WSI graphs, for graph-based models
 path_cluster: /data/nlst/processed/patch-l1-cluster8-ids # path to patch clusters, for cluster-based models
 path_coordx5: null
-path_label: ./data_split/nlst/nlst_path_full.csv # path to the csv table with patient_id, pathology_id, t, e
+path_label: ./table/nlst_path_full.csv # path to the csv table with patient_id, pathology_id, t, e
 feat_format: pt 
 time_format: ratio
 time_bins: 4
-data_split_path: ./data_split/nlst/nlst-seed42-fold{}.npz # path to data split
+data_split_path: ./data_split/nlst-fold{}.npz # path to data split
 data_split_seed: [0, 1, 2, 3, 4] # fold identifiers, used to fill the placeholder in `data_split_path`
 save_prediction: True
 train_sampling: null # w/o data sampling
@@ -85,7 +85,7 @@ log_plot: False
 semi_training: False
 semi_training_mode: UD+LD # training mode: UD / LD / UD+LD / NA (see more in the line 735 of model_hanlder.py)
 ssl_epochs: 300 # epoch number of semi-supervised training
-ssl_num_labeled: [0.2, 0.4, 0.6, 0.8] # the ratio of the labeled data split from the training data
+ssl_num_labeled: 0.6 # the ratio of the labeled data split from the training data
 ssl_kfold: 5 # the fold number for k-fold semi-supervised training 
 ssl_resume_ckpt: best # won't be used
 ssl_es_patience: 30 # early stopping setting
@@ -99,6 +99,6 @@ test_wandb_prj: AdvMIL-best-zeromask-test # wandb project name of test mode
 test_path: test # dataset name you want to test, which should be a key in the npz file for data split
 test_load_path: ./advmil_best_model/nlst-ablation_ncor_iprd_gl4-data_split_seed_{}-gen_noi_noise_0-1 # path to load trained models
 test_save_path: ./results-robust/results-zeromask_test/advmil-best/nlst-test_maskzero_{}-data_split_seed_{} # path to save test results
-test_mask_ratio: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] # mask ratio 
+test_mask_ratio: 0.8 # mask ratio 
 test_sampling_times: 1 # sampling times (in test mode) when predicting survival from each WSI. 
 test_zero_noise: True # if using zero noise for testing

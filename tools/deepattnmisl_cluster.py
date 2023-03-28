@@ -13,7 +13,7 @@ import torch
 from sklearn.cluster import KMeans
 
 PIDS_TO_PROCESS = []
-path_csv = '/data/{}/table/{}_path_full.csv' # path to the table with patient_id and pathology_id
+path_csv = './table/{}_path_full.csv' # path to the table with patient_id and pathology_id
 ROOT_DIR = '/data/{}/processed' # root dir of data
 READ_DIR = 'feat-l1-RN50-B/pt_files' # path to patch features
 SAVE_DIR = 'patch-l1-cluster{}-ids' # directory name to output and save in ROOT_DIR
