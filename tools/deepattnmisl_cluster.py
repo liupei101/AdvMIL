@@ -15,8 +15,8 @@ from sklearn.cluster import KMeans
 PIDS_TO_PROCESS = []
 path_csv = '/data/{}/table/{}_path_full.csv' # path to the table with patient_id and pathology_id
 ROOT_DIR = '/data/{}/processed' # root dir of data
-READ_DIR = 'feat-x20-RN50-B/pt_files' # path to patch features
-SAVE_DIR = 'patch-x20-cluster{}-ids' # directory name to output and save in ROOT_DIR
+READ_DIR = 'feat-l1-RN50-B/pt_files' # path to patch features
+SAVE_DIR = 'patch-l1-cluster{}-ids' # directory name to output and save in ROOT_DIR
 
 def main(dir_read, dir_save, csv_path, num_clusters):
     df = pd.read_csv(csv_path, dtype={'patient_id': str, 'pathology_id': str}) # patient_id/pathology_id

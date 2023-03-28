@@ -8,9 +8,9 @@ save_path: ./results-adv/nlst-patch # path to save log files during training and
 
 # data
 dataset: NLST
-path_patch: /data/nlst/processed/feat-x20-RN50-B/pt_files # path to patch features, for patch-based models
-path_graph: /data/nlst/processed/wsigraph-x20-features # path to WSI graphs, for graph-based models
-path_cluster: /data/nlst/processed/patch-x20-cluster8-ids # path to patch clusters, for cluster-based models
+path_patch: /data/nlst/processed/feat-l1-RN50-B/pt_files # path to patch features, for patch-based models
+path_graph: /data/nlst/processed/wsigraph-l1-features # path to WSI graphs, for graph-based models
+path_cluster: /data/nlst/processed/patch-l1-cluster8-ids # path to patch clusters, for cluster-based models
 path_coordx5: null
 path_label: ./data_split/nlst/nlst_path_full.csv # path to the csv table with patient_id, pathology_id, t, e
 feat_format: pt 

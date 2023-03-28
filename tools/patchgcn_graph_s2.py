@@ -19,9 +19,9 @@ import nmslib
 #PATHIDS_TO_PROCESS = ['10848'] # 10848 pathology_id respective to the patient with ID 128599 
 PATHIDS_TO_PROCESS = []
 ROOT_DIR = '/data/{}/processed' # root dir
-COOR_READ_DIR = 'tiles-x20-s256/patches' # path to patch coordinates
-FEAT_READ_DIR = 'feat-x20-RN50-B/pt_files' # patch to patch features
-SAVE_DIR = 'wsigraph-x20-features' # path to save
+COOR_READ_DIR = 'tiles-l1-s256/patches' # path to patch coordinates
+FEAT_READ_DIR = 'feat-l1-RN50-B/pt_files' # patch to patch features
+SAVE_DIR = 'wsigraph-l1-features' # path to save
 
 
 class Hnsw:

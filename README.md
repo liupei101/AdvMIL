@@ -2,7 +2,7 @@
 
 arXiv Preprint: http://arxiv.org/abs/2212.06515
 
-Model release: [Google Rrive - AdvMIL-models](https://drive.google.com/drive/folders/1sSfUe537zWVIsNZ9t9nSS2GzwgmKG5ry?usp=sharing)
+Model release: [Google Drive - AdvMIL-models](https://drive.google.com/drive/folders/1sSfUe537zWVIsNZ9t9nSS2GzwgmKG5ry?usp=sharing)
 
 (on updating)
 
@@ -15,19 +15,24 @@ Here we show **how to run AdvMIL** for WSI survival analysis.
 
 ### Data preparation
 
-It is highly recommended to utilize an easy-to-use tool, [CLAM](https://github.com/mahmoodlab/CLAM), for WSI preprocessing, including dataset download, tissue segmentation, patching, and patch feature extraction. Please see a detailed documentation at https://github.com/mahmoodlab/CLAM. 
+*WSI preprocessing toolkit*: it is highly recommended to utilize an easy-to-use tool, [CLAM](https://github.com/mahmoodlab/CLAM), for WSI preprocessing, including dataset download, tissue segmentation, patching, and patch feature extraction. Please see a detailed documentation at https://github.com/mahmoodlab/CLAM. 
 
-With CLAM, it is expected that you have the following file directories (taking `nlst` for example) in your computer.
-- `/data/nlst/processed/feat-x20-RN50-B`: path to all patch features. 
-- `/data/nlst/processed/tiles-x20-s256`: path to all segmented patch coordinates. 
+Next, we provide detailed steps to preprocess WSIs using `CLAM` (assuming you have already known its basic usage):
+- patching at `level = 3`: go to CLAM directory and run `python create_patches_fp.py --source DATA_DIRECTORY --save_dir RESULTS_DIRECTORY --patch_level 3 --patch_size 256 --seg --patch --stitch`. This step will save the coodinates of segmented patches at `level = 3`. 
+- patching at `level = 1`: back to AdvMIL and run `python3 big_to_small_patching.py DIR_READ_COORDS DIR_TO_COORDS` in `./tools`. This step will compute and save the patch coodinates at `level = 1`. `DIR_READ_COORDS` should be the full path of the patch coodinates at `level = 3` from previous step. 
+- Feature extracting: go to CLAM directory and run `CUDA_VISIBLE_DEVICES=0,1 python extract_features_fp.py --data_h5_dir DIR_TO_COORDS --data_slide_dir DATA_DIRECTORY --csv_path CSV_FILE_NAME --feat_dir FEATURES_DIRECTORY --batch_size 512 --slide_ext .svs`. This step will compute all patch features and save them in `FEATURES_DIRECTORY`. Note that `DIR_TO_COORDS` should be the full path of the patch coodinates at `level = 1` from previous step. 
+
+Now it is expected that you have the following file directories (taking `nlst` for example) in your computer.
+- `/data/nlst/processed/feat-l1-RN50-B`: path to all patch features. 
+- `/data/nlst/processed/tiles-l1-s256`: path to all segmented patch coordinates. 
 
 *Options*: if you want to a graph-based or cluster-based model, you should further prepare the followings:
-- graph-based model: go to `./tools/` and run `python3 patchgcn_graph_s1.py nlst`  and `python3 patchgcn_graph_s2.py nlst`.
-- cluster-based model: go to `./tools/` and run `python3 deepattnmisl_cluster.py nlst 8`.
+- graph-based model: go to `./tools/` and run `python3 patchgcn_graph_s2.py nlst`. It will generate a new directory `/data/nlst/processed/wsigraph-l1-features` that stores patient-level graphs. 
+- cluster-based model: go to `./tools/` and run `python3 deepattnmisl_cluster.py nlst 8`. It will generate a new directory `/data/nlst/processed/patch-l1-cluster8-ids` that stores cluster labels. 
 
 ### Network training
 
-You should prepare a `YAML` file for configuring the setting of read/save path, network architecture, network training, etc. We have provided an example configuration (`./config/cfg_nlst.yaml`) for training nlst with AdvMIL, as well as the detailed descriptions regarding important configurations. 
+Now you should prepare a `YAML` file for configuring the setting of read/save path, network architecture, network training, etc. We have provided an example configuration (`./config/cfg_nlst.yaml`) for training nlst with AdvMIL, as well as the detailed descriptions regarding important configurations. 
 
 When you finished the configuration above, you can run the following command for training, validation, and testing AdvMIL:
 ```bash

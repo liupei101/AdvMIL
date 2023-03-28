@@ -107,11 +107,11 @@ def G_input_constructor(args=('patch', 'tuple')):
     # input cfg
     cfg = {
         'bcb_mode': bcb_type,
-        'path_patch': '/NAS02/ExpData/nlst/feat-x20-RN50-B-color_norm/pt_files',
-        'path_graph': '/NAS02/ExpData/nlst/wsigraph-x20-features',
-        'path_cluster': '/NAS02/ExpData/nlst/patch-x20-cluster8-ids',
-        'path_coordx5': '/NAS02/ExpData/nlst/hier-x5-tiles-s256/patches',
-        'path_label': './data_split/nlst/nlst_path_full.csv',
+        'path_patch': '/data/nlst/processed/feat-l1-RN50-B-color_norm/pt_files',
+        'path_graph': '/data/nlst/processed/wsigraph-l1-features',
+        'path_cluster': '/data/nlst/processed/patch-l1-cluster8-ids',
+        'path_coordx5': '/data/nlst/processed/tiles-l3-s256/patches',
+        'path_label': '/data/nlst/table/nlst_path_full.csv',
         'feat_format': 'pt',
         'time_format': 'ratio',
         'time_bins': 4,
