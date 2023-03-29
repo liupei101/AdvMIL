@@ -7,7 +7,7 @@ Model release: [Google Drive - AdvMIL-models](https://drive.google.com/drive/fol
 (on updating)
 
 *TL;DR*: 
-> This work proposes a novel adversarial MIL framework for the survival analysis on gagipixel Whole-Slide Images (WSIs). This framework directly estimates the distribution of time-to-event from WSIs by implicitly sampling from generator. It introduces adversarial time-to-event modeling into the MIL paradigm that is much necessary for WSI analysis, by constructing a MIL encoder and a region-level instance projection fusion network for generator and discriminator, respectively. We empirically demonstrate that AdvMIL has the following advantages or abilities: (1) combining it with existing MIL networks for predictive performance enhancement; (2) effectively utilizing unlabeled WSIs for semi-supervised learning; (3) the robustness to patch occlusion, image gaussian blurring, and image HED color variation. 
+> This work proposes a novel adversarial MIL framework for the survival analysis on gagipixel Whole-Slide Images (WSIs). This framework directly estimates the distribution of time-to-event from WSIs by implicitly sampling from generator. It introduces adversarial time-to-event modeling into the MIL paradigm that is much necessary for WSI analysis, by constructing a MIL encoder and a region-level instance projection fusion network for generator and discriminator, respectively. We empirically demonstrate that AdvMIL has the following advantages or abilities: (1) combining it with existing MIL networks for predictive performance enhancement; (2) effectively utilizing unlabeled WSIs for semi-supervised learning; (3) the robustness to patch occlusion, image Gaussian blurring, and image HED color variation. 
 
 ## AdvMIL walkthrough 
 
@@ -18,9 +18,9 @@ Here we show **how to run AdvMIL** for WSI survival analysis.
 *WSI preprocessing toolkit*: it is highly recommended to utilize an easy-to-use tool, [CLAM](https://github.com/mahmoodlab/CLAM), for WSI preprocessing, including dataset download, tissue segmentation, patching, and patch feature extraction. Please see a detailed documentation at https://github.com/mahmoodlab/CLAM. 
 
 Next, we provide detailed steps to preprocess WSIs using `CLAM` (assuming you have already known its basic usage):
-- patching at `level = 3`: go to CLAM directory and run `python create_patches_fp.py --source DATA_DIRECTORY --save_dir RESULTS_DIRECTORY --patch_level 3 --patch_size 256 --seg --patch --stitch`. This step will save the coodinates of segmented patches at `level = 3`. 
-- patching at `level = 1`: go back to AdvMIL and run `python3 big_to_small_patching.py DIR_READ_COORDS DIR_TO_COORDS` in `./tools`. This step will compute and save the patch coodinates at `level = 1`. `DIR_READ_COORDS` should be the full path of the patch coodinates at `level = 3` from previous step. 
-- Feature extracting: go to CLAM directory and run `CUDA_VISIBLE_DEVICES=0,1 python extract_features_fp.py --data_h5_dir DIR_TO_COORDS --data_slide_dir DATA_DIRECTORY --csv_path CSV_FILE_NAME --feat_dir FEATURES_DIRECTORY --batch_size 512 --slide_ext .svs`. This step will compute all patch features and save them in `FEATURES_DIRECTORY`. Note that `DIR_TO_COORDS` should be the full path of the patch coodinates at `level = 1` from previous step. 
+- patching at `level = 3`: go to CLAM directory and run `python create_patches_fp.py --source DATA_DIRECTORY --save_dir RESULTS_DIRECTORY --patch_level 3 --patch_size 256 --seg --patch --stitch`. This step will save the coordinates of segmented patches at `level = 3`. 
+- patching at `level = 1`: go back to AdvMIL and run `python3 big_to_small_patching.py DIR_READ_COORDS DIR_TO_COORDS` in `./tools`. This step will compute and save the patch coordinates at `level = 1`. `DIR_READ_COORDS` should be the full path of the patch coordinates at `level = 3` from previous step. 
+- Feature extracting: go to CLAM directory and run `CUDA_VISIBLE_DEVICES=0,1 python extract_features_fp.py --data_h5_dir DIR_TO_COORDS --data_slide_dir DATA_DIRECTORY --csv_path CSV_FILE_NAME --feat_dir FEATURES_DIRECTORY --batch_size 512 --slide_ext .svs`. This step will compute all patch features and save them in `FEATURES_DIRECTORY`. Note that `DIR_TO_COORDS` should be the full path of the patch coordinates at `level = 1` from previous step. 
 
 Now it is expected that you have the following file directories (taking `nlst` for example) in your computer.
 - `/data/nlst/processed/feat-l1-RN50-B`: path to all patch features. 
@@ -42,8 +42,8 @@ Here we show and explain some important configurations so that you can successfu
 - `bcb_mode`: the backbone of generator, one of `patch` (ESAT), `graph` (PatchGCN), `cluster` (DeepAttnMISL), and `abmil` (ABMIL).
 - `disc_prj_iprd`: the way of fusion operation, one of `instance` (RLIP) and `bag` (regular fusion).
 - `gen_noi_noise`: the setting of noise adding, one of `0-1`, `1-0`, and `1-1`.
-- `semi_training`: if running semi-supervised training with AdvMIL. All the related configurations are started with `ssl_`.
-- `test`: if only testing models. Trained models will be loaded from `test_load_path`. All the related configurations are started with `test_`. 
+- `semi_training`: whether running semi-supervised training with AdvMIL. All the related configurations are started with `ssl_`.
+- `test`: whether in a test mode. Trained models will be loaded from `test_load_path` for testing the samples in `test_path`. All the related configurations are started with `test_`. 
 
 When you finished the configuration above, you can run the following command for training, validation, and testing:
 ```bash
@@ -55,7 +55,7 @@ When you finished the configuration above, you can run the following command for
 python3 main.py --config config/cfg_nlst.yaml --handler adv --multi_run
 ```
 
-Other options:
+*Other options*:
 - if you just want to test the model trained before, please change `test: False` to `test: True` in `config/cfg_nlst.yaml` before running. 
 - if you want to run the semi-supervised training with AdvMIL, please change `semi_training: False` to `semi_training: True` in `config/cfg_nlst.yaml` before running. 
 
