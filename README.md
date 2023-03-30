@@ -9,6 +9,17 @@ Model release: [Google Drive - AdvMIL-models](https://drive.google.com/drive/fol
 *TL;DR*: 
 > This work proposes a novel adversarial MIL framework for the survival analysis on gagipixel Whole-Slide Images (WSIs). This framework directly estimates the distribution of time-to-event from WSIs by implicitly sampling from generator. It introduces adversarial time-to-event modeling into the MIL paradigm that is much necessary for WSI analysis, by constructing a MIL encoder and a region-level instance projection fusion network for generator and discriminator, respectively. We empirically demonstrate that AdvMIL has the following advantages or abilities: (1) combining it with existing MIL networks for predictive performance enhancement; (2) effectively utilizing unlabeled WSIs for semi-supervised learning; (3) the robustness to patch occlusion, image Gaussian blurring, and image HED color variation. 
 
+## Requirements
+
+- Python ≥ 3.6
+- Pytorch ≥ 1.9.0 
+- CUDA ≥ 11.1
+- wandb ≥ 0.13.11
+- numpy ≥ 1.19.5
+- pandas ≥ 1.1.5
+
+Our experiments run on a workstation with 2 V100s GPUs (python 3.6, torch 1.9.0, and cuda 11.1). 
+
 ## AdvMIL walkthrough 
 
 Here we show **how to run AdvMIL** for WSI survival analysis. 
