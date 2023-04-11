@@ -62,7 +62,7 @@ CUDA_VISIBLE_DEVICES=0,1 python extract_features_fp.py \
     --feat_dir /data/nlst/processed/feat-l1-RN50-B \
     --batch_size 512 --slide_ext .svs
 ```
-This step will compute all patch features and save them in `FEATURES_DIRECTORY`. Note that `DIR_TO_COORDS` should be the full path of the patch coordinates at `level = 1` from previous step. 
+This step will compute all patch features and save them in `/data/nlst/processed/feat-l1-RN50-B`. Note that `--data_h5_dir` should be the full path of the patch coordinates at `level = 1` from previous step. 
 
 Now it is expected that you have the following file directories (taking `nlst` for example) in your computer.
 - `/data/nlst/processed/feat-l1-RN50-B`: path to all patch features. 
@@ -106,6 +106,11 @@ Here we show and explain some important configurations so that you can successfu
 - `semi_training`: whether running semi-supervised training with AdvMIL. All the related configurations are started with `ssl_`.
 - `test`: whether in a test mode. Trained models will be loaded from `test_load_path` for testing the samples in `test_path`. All the related configurations are started with `test_`. 
 
+Three modes of AdvMIL:
+1. The *common mode* of training/validation/test: you can directly use our configuration example (`./config/cfg_nlst.yaml`).
+2. The *test mode*: you just want to test the model trained before, please change `test: False` to `test: True` in `./config/cfg_nlst.yaml` before running. 
+3. The *semi-supervised training mode*: you want to run the semi-supervised training with AdvMIL, please change `semi_training: False` to `semi_training: True` in `./config/cfg_nlst.yaml` before running. 
+
 When you finished the configuration above, you can run the following command (on all folds) for training, validation, and testing:
 ```bash
 # load your config in config/cfg_nlst.yaml, and run AdvMIL
@@ -118,6 +123,7 @@ python3 main.py \
     --handler adv \
     --multi_run
 ```
+
 If you only run once (e.g., only single fold), you can use the following command:
 ```bash
 # load your config in config/cfg_nlst.yaml, and run AdvMIL
@@ -129,10 +135,6 @@ python3 main.py \
     --config config/cfg_nlst.yaml \
     --handler adv
 ```
-
-*Other options*:
-- if you just want to test the model trained before, please change `test: False` to `test: True` in `config/cfg_nlst.yaml` before running. 
-- if you want to run the semi-supervised training with AdvMIL, please change `semi_training: False` to `semi_training: True` in `config/cfg_nlst.yaml` before running. 
 
 ## Model release
 
