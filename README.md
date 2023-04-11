@@ -106,10 +106,10 @@ Here we show and explain some important configurations so that you can successfu
 - `semi_training`: whether running semi-supervised training with AdvMIL. All the related configurations are started with `ssl_`.
 - `test`: whether in a test mode. Trained models will be loaded from `test_load_path` for testing the samples in `test_path`. All the related configurations are started with `test_`. 
 
-Three modes of AdvMIL:
-1. The *common mode* of training/validation/test: you can directly use our configuration example (`./config/cfg_nlst.yaml`).
-2. The *test mode*: you just want to test the model trained before, please change `test: False` to `test: True` in `./config/cfg_nlst.yaml` before running. 
-3. The *semi-supervised training mode*: you want to run the semi-supervised training with AdvMIL, please change `semi_training: False` to `semi_training: True` in `./config/cfg_nlst.yaml` before running. 
+**Three running modes in AdvMIL**:
+1. *common mode*: for conventional training/validation/test, you can directly use our configuration example (`./config/cfg_nlst.yaml`).
+2. *test mode*: you just want to test the model trained before, please change `test: False` to `test: True` in `./config/cfg_nlst.yaml` before running. 
+3. *semi-supervised training mode*: you want to run the semi-supervised training with AdvMIL, please change `semi_training: False` to `semi_training: True` in `./config/cfg_nlst.yaml` before running. 
 
 When you finished the configuration above, you can run the following command (on all folds) for training, validation, and testing:
 ```bash
