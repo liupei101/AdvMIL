@@ -1,15 +1,7 @@
-"""
-This script is used to prepare Graphs for the graph-based PatchGCN,
-which follows PatchGCN's original paper.
-
-The first step of graph construction.
-1. hier-x5-tiles-s256/patches -> hier-x20-tiles-s256/patches
-2. hier-x20-tiles-s256/patches          -->
-   feat-x20-RN50-B-color_norm/pt_files  -->  wsigraph_20x_features (graph data)
-"""
 import sys
 import os
 import os.path as osp
+import shutil
 import h5py
 import numpy as np
 from tqdm import tqdm
@@ -95,6 +87,8 @@ def process_coords(dir_read, dir_save):
 
 # python3 big_to_small_patching.py READ_PATCH_DIR SAVE_PATCH_DIR 
 if __name__ == '__main__':
-    READ_PATCH_DIR = ROOT_DIR.format(sys.argv[1]) # full read path to the patch coordinates at level = 3.
-    SAVE_PATCH_DIR = ROOT_DIR.format(sys.argv[2]) # full save path to the patch coordinates at level = 1.
+    READ_PATCH_DIR = sys.argv[1] # full read path to the patch coordinates at level = 3.
+    SAVE_PATCH_DIR = sys.argv[2] # full save path to the patch coordinates at level = 1.
     process_coords(READ_PATCH_DIR, SAVE_PATCH_DIR)
+    # at the same time, copy the processing record file to SAVE_PATCH_DIR
+    shutil.copy(osp.join(READ_PATCH_DIR, 'process_list_autogen.csv'), SAVE_PATCH_DIR)
