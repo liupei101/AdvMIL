@@ -87,7 +87,7 @@ def process_coords(dir_read, dir_save):
 
 # python3 big_to_small_patching.py READ_PATCH_DIR SAVE_PATCH_DIR 
 if __name__ == '__main__':
-    READ_PATCH_DIR = sys.argv[1] # full read path to the patch coordinates at level = 3.
+    READ_PATCH_DIR = sys.argv[1] # full read path to the patch coordinates at level = 2.
     SAVE_PATCH_DIR = sys.argv[2] # full save path to the patch coordinates at level = 1.
     process_coords(READ_PATCH_DIR, SAVE_PATCH_DIR)
     # at the same time, copy the processing record file to SAVE_PATCH_DIR
