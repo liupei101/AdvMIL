@@ -3,6 +3,10 @@ This script is used to prepare clusters for the cluster-based DeepAttnMISL,
 which follows DeepAttnMISL's original paper.
 
 Cluster patches from the slides of a patient.
+
+Usage:
+> python3 deepattnmisl_cluster.py NLST 8
+Note that 8 is the number of clusters you want to set.
 """
 import sys
 import os
@@ -55,9 +59,6 @@ def main(dir_read, dir_save, csv_path, num_clusters):
         cnt_i += 1
         print('processed {}/{}.'.format(cnt_i, cnt))
 
-
-# python3 deepattnmisl_cluster.py NLST 8
-# 8 is the number of clusters you want to set
 if __name__ == '__main__':
     dataset_name = sys.argv[1]
     N_cluster = int(sys.argv[2])

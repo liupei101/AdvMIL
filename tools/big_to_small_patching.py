@@ -1,3 +1,7 @@
+"""
+Usage:
+> python3 big_to_small_patching.py READ_PATCH_DIR SAVE_PATCH_DIR 
+"""
 import sys
 import os
 import os.path as osp
@@ -85,7 +89,6 @@ def process_coords(dir_read, dir_save):
         path_save = osp.join(dir_save, fname)
         coords_x5_to_x20(path_read, path_save)
 
-# python3 big_to_small_patching.py READ_PATCH_DIR SAVE_PATCH_DIR 
 if __name__ == '__main__':
     READ_PATCH_DIR = sys.argv[1] # full read path to the patch coordinates at level = 2.
     SAVE_PATCH_DIR = sys.argv[2] # full save path to the patch coordinates at level = 1.

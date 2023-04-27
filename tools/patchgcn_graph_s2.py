@@ -3,6 +3,9 @@ This script is used to prepare Graphs for the graph-based PatchGCN,
 which follows PatchGCN's original paper.
 
 The second step of graph construction.
+
+Usage:
+> python3 patchgcn_graph_s2.py NLST
 """
 import sys
 import os
@@ -116,8 +119,6 @@ def main(h5_path, pt_path, save_path):
             pbar.set_description('%s - Broken H5' % (path_id))
             print(h5_fname, 'Broken')
 
-
-# python3 patchgcn_graph_s2.py NLST
 if __name__ == '__main__':
     dataset_name = sys.argv[1]
     data_dir = ROOT_DIR.format(dataset_name)

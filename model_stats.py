@@ -110,7 +110,7 @@ def G_input_constructor(args=('patch', 'tuple')):
         'path_patch': '/data/nlst/processed/feat-l1-RN50-B-color_norm/pt_files',
         'path_graph': '/data/nlst/processed/wsigraph-l1-features',
         'path_cluster': '/data/nlst/processed/patch-l1-cluster8-ids',
-        'path_coordx5': '/data/nlst/processed/tiles-l3-s256/patches',
+        'path_coordx5': '/data/nlst/processed/tiles-l2-s256/patches',
         'path_label': '/data/nlst/table/nlst_path_full.csv',
         'feat_format': 'pt',
         'time_format': 'ratio',
