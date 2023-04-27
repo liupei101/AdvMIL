@@ -4,6 +4,9 @@ arXiv Preprint: http://arxiv.org/abs/2212.06515
 
 Model release: [Google Drive - AdvMIL-models](https://drive.google.com/drive/folders/1sSfUe537zWVIsNZ9t9nSS2GzwgmKG5ry?usp=sharing)
 
+<img src="./doc/arch-advmil.png" width="70%" align='left' />
+<img src="./doc/arch-rlip.png" width="70%" align='left' />
+
 (on updating)
 
 *TL;DR*: 
@@ -26,7 +29,7 @@ Here we show **how to run AdvMIL** for WSI survival analysis.
 
 ### Data preparation
 
-*WSI preprocessing toolkit*: it is highly recommended to utilize an easy-to-use tool, [CLAM](https://github.com/mahmoodlab/CLAM), for WSI preprocessing, including dataset download, tissue segmentation, patching, and patch feature extraction. Please see a detailed documentation at https://github.com/mahmoodlab/CLAM, or refer to [Complete Tutorial - Processing WSIs for MIL](https://github.com/liupei101/Pipeline-Processing-TCGA-Slides-for-MIL) for a complete and more detailed tutorial built opon CLAM. 
+*WSI preprocessing toolkit*: it is highly recommended to utilize an easy-to-use tool, [CLAM](https://github.com/mahmoodlab/CLAM), for WSI preprocessing, including dataset download, tissue segmentation, patching, and patch feature extraction. Please see a detailed documentation at https://github.com/mahmoodlab/CLAM, or refer to [Tutorial - Processing WSIs for MIL from Scratch](https://github.com/liupei101/Pipeline-Processing-TCGA-Slides-for-MIL) for a complete and more detailed tutorial built opon CLAM. 
 
 Next, we provide detailed steps to preprocess WSIs using `CLAM` (assuming you have already known its basic usage):
 1. patching at `level = 2` (downsampled `16x`): go to CLAM directory and run 
