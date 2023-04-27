@@ -4,8 +4,8 @@ arXiv Preprint: http://arxiv.org/abs/2212.06515
 
 Model release: [Google Drive - AdvMIL-models](https://drive.google.com/drive/folders/1sSfUe537zWVIsNZ9t9nSS2GzwgmKG5ry?usp=sharing)
 
-<img src="./doc/arch-advmil.png" width="70%" align='left' />
-<img src="./doc/arch-rlip.png" width="70%" align='left' />
+<img src="./docs/arch-advmil.png" width="70%" align='left' />
+<img src="./docs/arch-rlip.png" width="70%" align='left' />
 
 (on updating)
 
