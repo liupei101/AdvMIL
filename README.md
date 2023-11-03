@@ -1,13 +1,9 @@
-# AdvMIL: Adversarial Multiple Instance Learning for the Survival Analysis on Whole-Slide Images
+# AdvMIL: Adversarial Multiple Instance Learning for the Survival Analysis on Whole-Slide Images (accepted by MedIA)
 
-arXiv Preprint: http://arxiv.org/abs/2212.06515
-
-Model release: [Google Drive - AdvMIL-models](https://drive.google.com/drive/folders/1sSfUe537zWVIsNZ9t9nSS2GzwgmKG5ry?usp=sharing)
+[arXiv Preprint](http://arxiv.org/abs/2212.06515) | [MedIA](https://doi.org/10.1016/j.media.2023.103020)
 
 <img src="./docs/arch-advmil.png" width="70%" align='left' />
 <img src="./docs/arch-rlip.png" width="70%" align='left' />
-
-(on updating)
 
 *TL;DR*: 
 > This work proposes a novel adversarial MIL framework for the survival analysis on gagipixel Whole-Slide Images (WSIs). This framework directly estimates the distribution of time-to-event from WSIs by implicitly sampling from generator. It introduces adversarial time-to-event modeling into the MIL paradigm that is much necessary for WSI analysis, by constructing a MIL encoder and a region-level instance projection fusion network for generator and discriminator, respectively. We empirically demonstrate that AdvMIL has the following advantages or abilities: (1) combining it with existing MIL networks for predictive performance enhancement; (2) effectively utilizing unlabeled WSIs for semi-supervised learning; (3) the robustness to patch occlusion, image Gaussian blurring, and image HED color variation. 
@@ -165,10 +161,13 @@ The best models trained on WSIs, with an architecture of ESAT + AdvMIL, and thei
 
 If this work helps your research, please consider citing our paper:
 ```
-@article{liu2022advmil,
-  title={AdvMIL: Adversarial Multiple Instance Learning for the Survival Analysis on Whole-Slide Images},
-  author={Liu, Pei and Ji, Luping and Ye, Feng and Fu, Bo},
-  journal={arXiv preprint arXiv:2212.06515},
-  year={2022}
+@article{LIU2023103020,
+    title = {AdvMIL: Adversarial multiple instance learning for the survival analysis on whole-slide images},
+    journal = {Medical Image Analysis},
+    pages = {103020},
+    year = {2023},
+    issn = {1361-8415},
+    doi = {https://doi.org/10.1016/j.media.2023.103020},
+    author = {Pei Liu and Luping Ji and Feng Ye and Bo Fu},
 }
 ```
